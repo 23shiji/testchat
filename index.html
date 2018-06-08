@@ -15,7 +15,7 @@
                     <button @click="send_message">发送</button> 
                 </p>
                 <p v-for="m in messages">
-                    <b></b><span>{{m.attributes.content}}</span>
+                    <b>{{m.username}}: </b><span>{{m.content}}</span>
                 </p>
             </div>
             <div v-else>
@@ -72,7 +72,7 @@
                             className: "DemoChat"
                         })
                         let msg = new DemoChat()
-                        msg.set("userId", this.user_info.id)
+                        msg.set("userId", this.user_info.toPointer())
                         msg.set("content", this.content)
                         msg.save(null, {
                             success: () => {
@@ -85,7 +85,7 @@
                     },
                     subscribe(){
                         let query = new Parse.Query('DemoChat')
-                        query.include("User")
+                        query.include("userId.username")
                         query.greaterThan("createdAt", new Date())
                         let subscription = query.subscribe()
                         subscription.on('create', (msg) => {
@@ -94,12 +94,15 @@
                     },
                     init_messages(){
                         let query = new Parse.Query('DemoChat')
-                        query.include("User")
+                        query.include("userId.username")
                         query.lessThanOrEqualTo("createdAt", new Date())
                         query.limit(50)
                         query.find({
                             success: (messages) => {
-                                this.messages = messages
+                                this.messages = messages.map(m => ({
+                                    username: m.attributes.userId.attributes.username,
+                                    content: m.attributes.content
+                                }))
                             },
                             error: (error) => {
                                 alert("网络已断，没救了，刷新吧")
