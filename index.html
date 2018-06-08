@@ -74,8 +74,9 @@
                         let msg = new DemoChat()
                         msg.set("userId", this.user_info.toPointer())
                         msg.set("content", this.content)
-                        msg.save(null, {
+                        msg.save({
                             success: () => {
+                                console.log("SENT")
                                 self.content = ''
                             },
                             error: () => {
