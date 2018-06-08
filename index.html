@@ -1,0 +1,119 @@
+<htm>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Test Chat</title>
+        <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.js"></script>
+        <script src="https://cdn.bootcss.com/parse/1.11.1/parse.js"></script>
+        <script src="https://cdn.bootcss.com/js-sha256/0.9.0/sha256.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div v-if="user_info">
+                <h3>你好, {{user_info.username}}</h3>
+                <p>
+                    <input v-model="content" @keydown.enter="send_message" type="text"/>
+                    <button @click="send_message">发送</button> 
+                </p>
+                <p v-for="m in messages">
+                    <b></b><span>{{m.attributes.content}}</span>
+                </p>
+            </div>
+            <div v-else>
+                <input type="text" v-model="username" /><br/>
+                <input type="password" v-model="password" /><br/>
+                <button @click="create_user(username, password)">注册</button>
+                <button @click="login(username, password)">登录</button>
+                <br/>
+            </div>
+        </div>
+        <script>
+            const vm = new Vue({
+                el: "#app",
+                data: {
+                    username: '',
+                    password: '',
+                    content: '',
+                    messages: [],
+                    user_info: null
+                },
+                methods: {
+                    create_user(username, password){
+                        let user = new Parse.User()
+                        user.set("username", username)
+                        user.set("password", password)
+                        user.signUp(null, {
+                            success: (user) => {
+                                this.user_info = user
+                                this.init_messages()
+                                this.subscribe()
+                            },
+                            error: (user, error) => {
+                                alert("创建失败: "+error.message)
+                            }
+                        })
+                    },
+                    login(username, password){
+                        Parse.User.logIn(username, password, {
+                            success: (user) => {
+                                console.log(user)
+                                this.user_info = user
+                                this.init_messages()
+                                this.subscribe()
+                    this.init_messages()
+                    this.subscribe()
+                            },
+                            error: (user, error) => {
+                                alert("登录失败: "+error.message)
+                            }
+                        })
+                    },
+                    send_message(){
+                        const DemoChat = Parse.Object.extend({
+                            className: "DemoChat"
+                        })
+                        let msg = new DemoChat()
+                        msg.set("userId", this.user_info.id)
+                        msg.set("content", this.content)
+                        msg.save(null, {
+                            success: () => {
+                                self.content = ''
+                            },
+                            error: () => {
+                                alert("发送失败了")
+                            }
+                        })
+                    },
+                    subscribe(){
+                        let query = new Parse.Query('DemoChat')
+                        query.include("User")
+                        query.greaterThan("createdAt", new Date())
+                        let subscription = query.subscribe()
+                        subscription.on('create', (msg) => {
+                            this.messages.unshift(msg)
+                        })
+                    },
+                    init_messages(){
+                        let query = new Parse.Query('DemoChat')
+                        query.include("User")
+                        query.lessThanOrEqualTo("createdAt", new Date())
+                        query.limit(50)
+                        query.find({
+                            success: (messages) => {
+                                this.messages = messages
+                            },
+                            error: (error) => {
+                                alert("网络已断，没救了，刷新吧")
+                            }
+                        })
+                    }
+                },
+                created(){
+                    const APP_ID = "2bf247ad-5ccd-42e6-b695-841c4ff11fb3"
+                    const CLIENT_KEY = "Va4M2Dwl2E6dFHXNGkivdDDeGQZGbAw0"
+                    Parse.serverURL = 'https://parse.buddy.com/parse'
+                    Parse.initialize(APP_ID, CLIENT_KEY)
+                }
+            })
+        </script>
+    </body>
+</htm>
