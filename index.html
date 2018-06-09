@@ -3,7 +3,8 @@
         <meta charset="utf-8"/>
         <title>Test Chat</title>
         <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.js"></script>
-        <script src="https://cdn.bootcss.com/parse/1.11.1/parse.js"></script>
+        <!-- <script src="//cdn1.lncld.net/static/js/3.7.2/av-min.js"></script> -->
+        <script src="//cdn1.lncld.net/static/js/3.7.2/av-live-query-min.js"></script>
         <script src="https://cdn.bootcss.com/js-sha256/0.9.0/sha256.js"></script>
     </head>
     <body>
@@ -38,78 +39,78 @@
                 },
                 methods: {
                     create_user(username, password){
-                        let user = new Parse.User()
-                        user.set("username", username)
-                        user.set("password", password)
-                        user.signUp(null, {
-                            success: (user) => {
+                        let user = new AV.User()
+                        user.setUsername(username)
+                        user.setPassword(password)
+                        user.signUp()
+                            .then((user) => {
                                 this.user_info = user
                                 this.init_messages()
-                            },
-                            error: (user, error) => {
+                            }).catch( (user, error) => {
                                 alert("创建失败: "+error.message)
-                            }
-                        })
+                            })
                     },
                     login(username, password){
-                        Parse.User.logIn(username, password, {
-                            success: (user) => {
+                        AV.User.logIn(username, password)
+                            .then((user) => {
                                 console.log(user)
                                 this.user_info = user
                                 this.init_messages()
-                    this.init_messages()
-                    this.subscribe()
-                            },
-                            error: (user, error) => {
+                                this.init_messages()
+                                this.subscribe()
+                            }).catch((user, error) => {
                                 alert("登录失败: "+error.message)
-                            }
-                        })
+                            })
                     },
                     send_message(){
-                        const DemoChat = Parse.Object.extend({
-                            className: "DemoChat"
+                        const DemoChat = AV.Object.extend({
+                            className: "TestMessage"
                         })
                         let msg = new DemoChat()
-                        msg.set("userId", this.user_info.toPointer())
+                        msg.set("user", this.user_info._toPointer())
                         msg.set("content", this.content)
-                        msg.save({
-                            success: (msg) => {
-                                this.content = ''
-                                this.messages.unshift({
-                                    username: this.user_info.attributes.username,
-                                    content: msg.attributes.content
-                                })
-                            },
-                            error: () => {
+                        msg.save()
+                        .then((msg) => {
+                            this.content = ''
+                            // this.messages.unshift({
+                            //     username: this.user_info.attributes.username,
+                            //     content: msg.attributes.content
+                            // })
+                        }).catch((error) => {
+                            console.error(error)
                                 alert("发送失败了")
-                            }
                         })
                     },
                     subscribe(){
-                        let query = new Parse.Query('DemoChat')
-                        query.include("userId.username")
-                        query.greaterThan("createdAt", new Date())
-                        let subscription = query.subscribe()
-                        subscription.on('create', (msg) => {
-                            this.messages.unshift(msg)
+                        let query = new AV.Query('TestMessage')
+                        query.subscribe().then((liveQuery) => {
+                            liveQuery.on('create', (msg) => {
+                                msg.fetch({
+                                    include: ["user"]
+                                }).then((msg) => {
+                                    this.messages.unshift({
+                                        username: msg.get("user").get("username"),
+                                        content: msg.get("content")
+                                    })
+                                })  
+                            })
                         })
                     },
                     init_messages(){
-                        let query = new Parse.Query('DemoChat')
-                        query.include("userId.username")
+                        let query = new AV.Query('TestMessage')
+                        query.include("user.username")
                         query.lessThanOrEqualTo("createdAt", new Date())
                         query.limit(50)
-                        query.find({
-                            success: (messages) => {
-                                this.messages = messages.map(m => ({
-                                    username: m.attributes.userId.attributes.username,
-                                    content: m.attributes.content
-                                })).reverse()
-                                console.log(this.messages)
-                            },
-                            error: (error) => {
-                                alert("网络已断，没救了，刷新吧")
-                            }
+                        query.find()
+                        .then((messages) => {
+                            this.messages = messages.map(m => ({
+                                username: m.attributes.user.attributes.username,
+                                content:  m.attributes.content
+                            })).reverse()
+                            console.log(this.messages)
+                        }).catch((error) => {
+                            console.error(error)
+                            alert("网络已断，没救了，刷新吧")
                         })
                         this.subscribe()
                     }
@@ -117,18 +118,22 @@
                 created(){
                     // const APP_ID = "2bf247ad-5ccd-42e6-b695-841c4ff11fb3"
                     // const CLIENT_KEY = "Va4M2Dwl2E6dFHXNGkivdDDeGQZGbAw0"
-                    // Parse.serverURL = 'https://parse.buddy.com/parse'
-                    // Parse.initialize(APP_ID, CLIENT_KEY)
+                    // AV.serverURL = 'https://AV.buddy.com/AV'
+                    // AV.initialize(APP_ID, CLIENT_KEY)
 
-                    const APP_ID = "UqV9GJEedAOz6iSxgtn9AzOG6sJjW0sBJwh27D9N"
-                    const CLIENT_KEY = "p2MivomLHK5FPInBVVigT20CB8gmPGATwZcxKnPk"
-                    Parse.serverURL = 'https://parseapi.back4app.com/'
-                    Parse.initialize(APP_ID, CLIENT_KEY)
+                    // const APP_ID = "UqV9GJEedAOz6iSxgtn9AzOG6sJjW0sBJwh27D9N"
+                    // const CLIENT_KEY = "p2MivomLHK5FPInBVVigT20CB8gmPGATwZcxKnPk"
+                    // AV.serverURL = 'https://parseapi.back4app.com/'
+                    // AV.initialize(APP_ID, CLIENT_KEY)
 
-                    Parse.Session.current().then(session => {
-                        this.user_info = session.attributes.user
+                    const APP_ID = "xpTHT125IoWveEQ4cYi8qf52-MdYXbMMI"
+                    const CLIENT_KEY = "OnbuOgk8HfQFXNavO6JhKtha"
+                    AV.initialize(APP_ID, CLIENT_KEY)
+
+                    this.user_info = AV.User.current()
+                    if(this.user_info){
                         this.init_messages()
-                    })
+                    }
                 }
             })
         </script>
