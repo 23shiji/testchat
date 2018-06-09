@@ -6,10 +6,11 @@
         <!-- <script src="//cdn1.lncld.net/static/js/3.7.2/av-min.js"></script> -->
         <script src="//cdn1.lncld.net/static/js/3.7.2/av-live-query-min.js"></script>
         <script src="https://cdn.bootcss.com/js-sha256/0.9.0/sha256.js"></script>
-        <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
-        <script src="https://cdn.bootcss.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
         <link href="https://cdn.bootcss.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href="https://cdn.bootcss.com/bootstrap/4.1.1/css/bootstrap-grid.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdn.bootcss.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
     </head>
     <body>
         <div id="app">
@@ -30,12 +31,24 @@
                     </div>
                 </template>
             </div>
-            <div v-else>
-                <input type="text" v-model="username" /><br/>
-                <input type="password" v-model="password" /><br/>
-                <button @click="create_user(username, password)">注册</button>
-                <button @click="login(username, password)">登录</button>
-                <br/>
+            <div v-else class="container">
+                <h3>{{welcome_title}}</h3>
+                <div class="row">
+                    <div class="input-group col-xs-12">
+                        <label for="unInput">用户名</label>
+                        <input id="unInput" class="form-control" type="text" v-model="username" />                        
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-group col-xs-12">
+                        <label for="pwdInput">密码</label>
+                        <input id="pwdInput" class="form-control" type="password" v-model="password" />
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-default col-xs-6" @click="create_user(username, password)">注册</button>
+                    <button class="btn btn-primary col-xs-6" @click="login(username, password)">登录</button>
+                </div>
             </div>
         </div>
         <script>
@@ -46,7 +59,8 @@
                     password: '',
                     content: '',
                     messages: [],
-                    user_info: null
+                    user_info: null,
+                    welcome_title: null
                 },
                 methods: {
                     create_user(username, password){
@@ -145,8 +159,36 @@
                     if(this.user_info){
                         this.init_messages()
                     }
+                    const welcome_titles = [
+                        "欢迎加入本计划！",
+                        "欢迎成为创作者！",
+                        "欢迎注视美少女！",
+                        "欢迎来到新世界！",
+                        "欢迎接受辅导！",
+                        "欢迎来到教室！",
+                        "欢迎来到延期偿还！",
+                        "欢迎来到中华街！",
+                        "欢迎来到夏日！",
+                        "欢迎来到黑暗面！",
+                        "欢迎掉入阴谋！",
+                        "欢迎来到网聚！",
+                        "欢迎来到天国！",
+                        "欢迎来到现实！",
+                        "欢迎来到幻想世界！",
+                        "欢迎来到GAME",
+                        "欢迎来感受幸福！",
+                        "欢迎来感受前途无亮！",
+                        "欢迎来找青鸟！",
+                        "欢迎来到冬天！",
+                        "欢迎来重头开始！",
+                        "欢迎成为神！",
+                        "欢迎来找岬！",
+                        "欢迎来到N・H・K！",
+                    ]
+                    this.welcome_title = welcome_titles[Math.floor(Math.random() * welcome_titles.length)]
                 }
             })
+            
         </script>
     </body>
 </htm>
